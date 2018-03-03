@@ -2,8 +2,10 @@ package com.gl.api.controller;
 
 import com.gl.api.model.Operation;
 import com.gl.api.model.ReceiptCode;
+import com.gl.api.model.response.JResponseEntity;
 import com.gl.api.repository.OperationRepository;
 import com.gl.api.services.ReceiptCodeService;
+import com.gl.api.util.ResponseFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -21,7 +23,7 @@ import java.util.Map;
  */
 
 @RestController
-@RequestMapping(value = "/operation")
+@RequestMapping(value = "/operations")
 public class OperationController {
 
     @Autowired
@@ -31,20 +33,15 @@ public class OperationController {
     private ReceiptCodeService codeService;
 
     @RequestMapping(method = RequestMethod.GET)
-    public ResponseEntity<Map<String, Object>> getAllOperation(
+    public JResponseEntity<Page<Operation>> getAllOperation(
             @RequestParam(value = "page", defaultValue = "0") int page,
             @RequestParam(value = "size", defaultValue = "10") int size) {
-        Map<String, Object> map = new HashMap<>();
         Page<Operation> operations = operationRepository.findAll(new PageRequest(page, size));
-        if (operations != null) {
-            map.put("STATUS", true);
-            map.put("MESSAGE", "SUCCESSFUL");
-            map.put("DATA", operations);
-        } else {
-            map.put("STATUS", false);
-            map.put("MESSAGE", "NO CONTENT");
+        if (!operations.getContent().isEmpty()) {
+            return ResponseFactory.build("SUCCESS", HttpStatus.OK, operations);
+        }else{
+            return ResponseFactory.build("FAILED", HttpStatus.NOT_FOUND);
         }
-        return new ResponseEntity<Map<String, Object>>(map, HttpStatus.OK);
     }
 
     @RequestMapping(method = RequestMethod.POST)
